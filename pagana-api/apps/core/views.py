@@ -1,13 +1,14 @@
-from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 # Placeholder views for architecture visualization
 # Full API views will be implemented during development
 
 
-@api_view(['GET'])
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def health_check(request):
     """Health check endpoint"""
-    return Response({'status': 'ok', 'message': 'Pagana API is running'})
+    return Response({"status": "ok", "message": "Pagana API is running"})
 
