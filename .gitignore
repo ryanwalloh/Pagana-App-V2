@@ -24,3 +24,6 @@ pnpm-debug.log*
 # Ignore refactor sandbox area
 To-Refactor/
 @To-Refactor
+
+# Cursor rules
+.cursorrules

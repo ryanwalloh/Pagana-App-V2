@@ -392,10 +392,8 @@ All platforms connect to the same backend API (`pagana-api`).
 
 ## 📄 License
 
-[Add your license here]
-
----
+N/A
 
 ## 👥 Contributors
 
-[Add contributor information here]
+N/A
