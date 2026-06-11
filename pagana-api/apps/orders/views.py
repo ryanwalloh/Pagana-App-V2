@@ -21,6 +21,7 @@ from .serializers import (
 from .services import (
     add_or_update_cart_item,
     checkout_cart,
+    clear_cart,
     get_or_create_cart,
     remove_cart_item,
     transition_order_by_merchant,
@@ -51,6 +52,11 @@ class CartView(CustomerOrderContextMixin, APIView):
             "items__product"
         ).get(pk=cart.pk)
         return Response(CartSerializer(cart).data)
+
+    def delete(self, request):
+        cart = get_or_create_cart(request.user)
+        clear_cart(cart)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CartItemListCreateView(CustomerOrderContextMixin, APIView):

@@ -77,6 +77,16 @@ Auth shorthand used below:
 
 ## Merchants
 
+### Public Storefront Discovery
+
+- `GET /api/v1/merchants`
+  Auth: `public`
+  Use case: paginated list of customer-visible storefronts (approved, active, visible, operational). Supports `?search=<name>` on display name. Returns only public fields: id, display name, storefront image, city.
+
+- `GET /api/v1/merchants/<merchant_id>`
+  Auth: `public`
+  Use case: fetch one customer-visible storefront's public header info (used by storefront pages even when the catalog is empty). Ineligible merchants return 404.
+
 ### Merchant Account Context
 
 - `GET /api/v1/merchant/profile`
@@ -144,6 +154,10 @@ Auth shorthand used below:
 ## Orders
 
 ### Customer Cart and Checkout
+
+- `DELETE /api/v1/cart`
+  Auth: `customer`
+  Use case: clear all cart items and reset the merchant context, e.g. when the customer chooses to start a new cart with a different merchant.
 
 - `GET /api/v1/cart`
   Auth: `customer`

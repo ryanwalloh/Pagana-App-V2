@@ -54,19 +54,19 @@ def build_cart_summary(cart):
 
 def add_or_update_cart_item(user, product, quantity):
     if not product_is_orderable(product):
-        raise serializers.ValidationError({"product_id": "Product is not currently orderable."})
+        raise serializers.ValidationError({"product_id": ["Product is not currently orderable."]})
 
     cart = get_or_create_cart(user)
     if cart.merchant_id and cart.merchant_id != product.merchant_id:
         raise serializers.ValidationError(
-            {"product_id": "Cart can only contain items from one merchant at a time."}
+            {"product_id": ["Cart can only contain items from one merchant at a time."]}
         )
 
     with transaction.atomic():
         cart = Cart.objects.select_for_update().select_related("merchant").get(pk=cart.pk)
         if cart.merchant_id and cart.merchant_id != product.merchant_id:
             raise serializers.ValidationError(
-                {"product_id": "Cart can only contain items from one merchant at a time."}
+                {"product_id": ["Cart can only contain items from one merchant at a time."]}
             )
 
         cart.merchant = product.merchant
@@ -82,7 +82,7 @@ def add_or_update_cart_item(user, product, quantity):
 
 def update_cart_item_quantity(cart_item, quantity):
     if not product_is_orderable(cart_item.product):
-        raise serializers.ValidationError({"product_id": "Product is not currently orderable."})
+        raise serializers.ValidationError({"product_id": ["Product is not currently orderable."]})
 
     cart_item.quantity = quantity
     cart_item.unit_price = cart_item.product.price
@@ -98,24 +98,36 @@ def remove_cart_item(cart_item):
         cart.save(update_fields=["merchant", "updated_at"])
 
 
+def clear_cart(cart):
+    """Empty the cart and reset its merchant context.
+
+    Used when a customer switches to ordering from a different merchant.
+    """
+    with transaction.atomic():
+        cart.items.all().delete()
+        if cart.merchant_id:
+            cart.merchant = None
+            cart.save(update_fields=["merchant", "updated_at"])
+
+
 def validate_checkout(cart):
     items = list(cart.items.select_related("product", "product__merchant"))
     if not items:
-        raise serializers.ValidationError({"cart": "Cart is empty."})
+        raise serializers.ValidationError({"cart": ["Cart is empty."]})
 
     if not cart.merchant_id:
-        raise serializers.ValidationError({"cart": "Cart does not have a merchant context."})
+        raise serializers.ValidationError({"cart": ["Cart does not have a merchant context."]})
 
     if not merchant_can_receive_orders(cart.merchant):
-        raise serializers.ValidationError({"merchant": "Merchant is not currently accepting orders."})
+        raise serializers.ValidationError({"merchant": ["Merchant is not currently accepting orders."]})
 
     subtotal = ZERO
     for item in items:
         if item.product.merchant_id != cart.merchant_id:
-            raise serializers.ValidationError({"cart": "Cart contains mixed merchant items."})
+            raise serializers.ValidationError({"cart": ["Cart contains mixed merchant items."]})
         if not product_is_orderable(item.product):
             raise serializers.ValidationError(
-                {"product_id": f"Product {item.product_id} is not currently orderable."}
+                {"product_id": [f"Product {item.product_id} is not currently orderable."]}
             )
         item.unit_price = item.product.price
         subtotal += item.product.price * item.quantity

@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.core.email import queue_email
 
@@ -107,14 +106,14 @@ class SignupSerializer(serializers.ModelSerializer):
                 recipient_list=[user.email],
             )
 
-        self._refresh = RefreshToken.for_user(user)
+        # Mint tokens through the same path as login so claims stay consistent.
+        self._refresh = PaganaTokenObtainPairSerializer.get_token(user)
         return user
 
     def to_representation(self, instance):
-        data = CurrentUserSerializer(instance, context=self.context).data
-        if hasattr(self, "_refresh"):
-            data["tokens"] = {
-                "refresh": str(self._refresh),
-                "access": str(self._refresh.access_token),
-            }
-        return data
+        # Mirror the login response shape: top-level tokens plus a nested user.
+        return {
+            "refresh": str(self._refresh),
+            "access": str(self._refresh.access_token),
+            "user": CurrentUserSerializer(instance, context=self.context).data,
+        }

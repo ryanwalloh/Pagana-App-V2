@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import AccessToken
 
 from apps.customers.models import CustomerProfile
 from apps.dispatch.models import RiderProfile
@@ -27,7 +28,13 @@ class IdentityApiTests(APITestCase):
                 )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn("tokens", response.data)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+        self.assertEqual(response.data["user"]["email"], "customer@example.com")
+
+        access_token = AccessToken(response.data["access"])
+        self.assertEqual(access_token["role"], "customer")
+
         self.assertTrue(User.objects.filter(email="customer@example.com").exists())
         self.assertTrue(CustomerProfile.objects.filter(user__email="customer@example.com").exists())
         mocked_delay.assert_called_once()

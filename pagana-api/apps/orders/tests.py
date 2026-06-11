@@ -107,6 +107,35 @@ class OrdersApiTests(APITestCase):
         cart = Cart.objects.get(customer=self.customer)
         self.assertIsNone(cart.merchant)
 
+    def test_customer_can_clear_cart(self):
+        self.authenticate()
+        self.client.post(
+            "/api/v1/cart/items",
+            {"product_id": self.product.id, "quantity": 2},
+            format="json",
+        )
+        self.client.post(
+            "/api/v1/cart/items",
+            {"product_id": self.second_product.id, "quantity": 1},
+            format="json",
+        )
+
+        clear_response = self.client.delete("/api/v1/cart")
+
+        self.assertEqual(clear_response.status_code, status.HTTP_204_NO_CONTENT)
+        cart = Cart.objects.get(customer=self.customer)
+        self.assertEqual(cart.items.count(), 0)
+        self.assertIsNone(cart.merchant)
+
+        # Cart is immediately usable for a different merchant afterwards.
+        switch_response = self.client.post(
+            "/api/v1/cart/items",
+            {"product_id": self.other_product.id, "quantity": 1},
+            format="json",
+        )
+        self.assertEqual(switch_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(switch_response.data["merchant"]["id"], self.other_merchant.id)
+
     def test_cart_rejects_cross_merchant_items(self):
         self.authenticate()
         self.client.post(

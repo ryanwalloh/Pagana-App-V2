@@ -63,26 +63,44 @@ pagana-web/
 └── package.json          # Dependencies
 ```
 
+## Local Development Workflow
+
+The app requires a running `pagana-api` backend. Use two terminals:
+
+**Terminal 1 — backend:**
+
+```bash
+cd ../pagana-api
+python3 -m venv .venv               # first time only
+.venv/bin/pip install -r requirements.txt   # first time only
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py runserver 8000
+```
+
+**Terminal 2 — frontend:**
+
+```bash
+cd pagana-web
+npm install                         # first time only
+npm run dev                         # serves on http://localhost:5173
+```
+
+The backend already allows CORS from `http://localhost:5173`.
+
 ## Installation
 
 1. **Install dependencies:**
    ```bash
    npm install
-   # or
-   yarn install
-   # or
-   pnpm install
    ```
 
-2. **Create environment file (optional):**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Add your API base URL:
+2. **Environment file:**
+
+   `.env.development` is committed with the local default:
    ```env
    VITE_API_BASE_URL=http://localhost:8000/api/v1
    ```
+   For other environments, copy `.env.example` and adjust.
 
 3. **Start the development server:**
    ```bash

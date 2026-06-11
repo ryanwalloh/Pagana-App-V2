@@ -65,7 +65,15 @@ pagana-api/
    python manage.py createsuperuser
    ```
 
-5. **Run the development server:**
+5. **Seed demo data (development only):**
+   ```bash
+   python manage.py seed_demo_data
+   ```
+   Creates approved merchants with products, gating fixtures, and known test
+   accounts (`customer@demo.pagana.local` / `merchant@demo.pagana.local`,
+   password `DemoPass123!`). Idempotent — safe to re-run.
+
+6. **Run the development server:**
    ```bash
    python manage.py runserver
    ```

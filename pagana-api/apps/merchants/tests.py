@@ -70,3 +70,80 @@ class MerchantApiTests(APITestCase):
         response = self.client.get("/api/v1/merchant/profile")
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class PublicMerchantApiTests(APITestCase):
+    def setUp(self):
+        self.eligible = Merchant.objects.create(
+            display_name="Eligible Eats",
+            approval_status=Merchant.ApprovalStatus.APPROVED,
+            is_active=True,
+            is_visible=True,
+            operational_status=Merchant.OperationalStatus.ACTIVE,
+        )
+
+    def _create_ineligible(self, **overrides):
+        defaults = {
+            "display_name": "Ineligible",
+            "approval_status": Merchant.ApprovalStatus.APPROVED,
+            "is_active": True,
+            "is_visible": True,
+            "operational_status": Merchant.OperationalStatus.ACTIVE,
+        }
+        defaults.update(overrides)
+        return Merchant.objects.create(**defaults)
+
+    def test_anonymous_can_list_eligible_merchants(self):
+        response = self.client.get("/api/v1/merchants")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        result = response.data["results"][0]
+        self.assertEqual(result["display_name"], "Eligible Eats")
+        self.assertEqual(
+            sorted(result.keys()),
+            ["city", "display_name", "id", "storefront_image_url"],
+        )
+
+    def test_each_ineligibility_dimension_is_excluded(self):
+        self._create_ineligible(approval_status=Merchant.ApprovalStatus.PENDING_REVIEW)
+        self._create_ineligible(is_active=False)
+        self._create_ineligible(is_visible=False)
+        self._create_ineligible(
+            operational_status=Merchant.OperationalStatus.TEMPORARILY_CLOSED
+        )
+
+        response = self.client.get("/api/v1/merchants")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], self.eligible.id)
+
+    def test_anonymous_can_retrieve_eligible_merchant_detail(self):
+        response = self.client.get(f"/api/v1/merchants/{self.eligible.id}")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["display_name"], "Eligible Eats")
+
+    def test_ineligible_merchant_detail_returns_404(self):
+        hidden = self._create_ineligible(is_visible=False)
+
+        response = self.client.get(f"/api/v1/merchants/{hidden.id}")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_supports_display_name_search(self):
+        self._create_ineligible(display_name="Other Shop")  # eligible but different name
+        Merchant.objects.create(
+            display_name="Eligible Bistro",
+            approval_status=Merchant.ApprovalStatus.APPROVED,
+            is_active=True,
+            is_visible=True,
+            operational_status=Merchant.OperationalStatus.ACTIVE,
+        )
+
+        response = self.client.get("/api/v1/merchants", {"search": "Eligible"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        names = [item["display_name"] for item in response.data["results"]]
+        self.assertEqual(names, ["Eligible Bistro", "Eligible Eats"])

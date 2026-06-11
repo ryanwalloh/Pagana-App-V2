@@ -3,6 +3,21 @@ from rest_framework import serializers
 from .models import Merchant, MerchantUserMembership
 
 
+class PublicMerchantSerializer(serializers.ModelSerializer):
+    """Customer-facing storefront listing. Excludes legal, contact, and
+    moderation fields, which are not public concerns."""
+
+    class Meta:
+        model = Merchant
+        fields = (
+            "id",
+            "display_name",
+            "storefront_image_url",
+            "city",
+        )
+        read_only_fields = fields
+
+
 class MerchantProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Merchant

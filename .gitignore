@@ -6,6 +6,8 @@
 # Environment / secrets
 .env
 .env.*
+!.env.example
+!.env.development
 *.pem
 
 # Dependencies and build outputs

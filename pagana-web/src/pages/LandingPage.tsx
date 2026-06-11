@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ModeToggle } from '@/components/mode-toggle';
+import { MerchantGrid } from '@/features/storefront/MerchantGrid';
 import paganaLogo from '@/assets/logos/pagana-index-logo.png';
 
 export default function LandingPage() {
@@ -63,7 +64,7 @@ export default function LandingPage() {
                 asChild 
                 className="bg-brand hover:bg-brand-hover text-white px-8 py-6 h-auto text-lg"
               >
-                <Link to="/register">Order Food Now</Link>
+                <a href="#restaurants">Order Food Now</a>
               </Button>
               <Button 
                 size="lg" 
@@ -109,8 +110,25 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Restaurant Browse Section */}
+      <section id="restaurants" className="py-24 bg-background scroll-mt-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-6">
+              Order From Local Favorites
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Browse restaurants near you and get your favorites delivered.
+            </p>
+          </div>
+          <div className="max-w-6xl mx-auto">
+            <MerchantGrid />
+          </div>
+        </div>
+      </section>
+
       {/* Vendor/Restaurant Section */}
-      <section className="py-24 bg-background">
+      <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Vendor Banner */}
           <div className="max-w-4xl mx-auto mb-20">
@@ -190,7 +208,7 @@ export default function LandingPage() {
       </section>
 
       {/* Rider Section */}
-      <section className="py-24 bg-muted/30">
+      <section className="py-24 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Rider Banner */}
           <div className="max-w-4xl mx-auto mb-20">
