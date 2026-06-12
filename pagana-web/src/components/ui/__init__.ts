@@ -1,2 +1,0 @@
-// Shadcn UI components
-

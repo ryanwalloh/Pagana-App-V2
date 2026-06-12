@@ -1,45 +1,34 @@
 import { apiClient } from './client';
+import type { AuthResponse, User } from './types';
 
-// Authentication API functions
 export interface LoginCredentials {
   email: string;
   password: string;
 }
 
-export interface RegisterData {
+export interface SignupData {
   email: string;
   password: string;
-  name: string;
-}
-
-export interface AuthResponse {
-  access: string;
-  refresh: string;
-  user: {
-    id: number;
-    email: string;
-    name: string;
-  };
+  phone_number?: string;
 }
 
 export const authApi = {
+  /** This client only creates customer accounts; the role is not user-controlled. */
+  signup: async (data: SignupData): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/auth/signup', {
+      ...data,
+      role: 'customer',
+    });
+    return response.data;
+  },
+
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/login/', credentials);
+    const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
     return response.data;
   },
 
-  register: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/register/', data);
-    return response.data;
-  },
-
-  logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout/');
-  },
-
-  refreshToken: async (refresh: string): Promise<{ access: string }> => {
-    const response = await apiClient.post<{ access: string }>('/auth/refresh/', { refresh });
+  me: async (): Promise<User> => {
+    const response = await apiClient.get<User>('/me');
     return response.data;
   },
 };
-

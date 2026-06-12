@@ -1,47 +1,49 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { authApi, LoginCredentials, RegisterData } from '@/api/auth';
-import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-// Custom hook for authentication
+import { authApi, type LoginCredentials, type SignupData } from '@/api/auth';
+import { useAuth } from '@/features/auth/AuthProvider';
+
+function useRedirectTarget(): string {
+  const location = useLocation();
+  const from = (location.state as { from?: { pathname?: string } } | null)?.from;
+  return from?.pathname ?? '/dashboard';
+}
+
 export const useLogin = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { setSession } = useAuth();
+  const redirectTo = useRedirectTarget();
 
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
     onSuccess: (data) => {
-      localStorage.setItem('authToken', data.access);
-      queryClient.setQueryData(['auth'], data);
-      navigate('/dashboard');
+      setSession(data);
+      navigate(redirectTo, { replace: true });
     },
   });
 };
 
-export const useRegister = () => {
+export const useSignup = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { setSession } = useAuth();
+  const redirectTo = useRedirectTarget();
 
   return useMutation({
-    mutationFn: (data: RegisterData) => authApi.register(data),
+    mutationFn: (data: SignupData) => authApi.signup(data),
     onSuccess: (data) => {
-      localStorage.setItem('authToken', data.access);
-      queryClient.setQueryData(['auth'], data);
-      navigate('/dashboard');
+      setSession(data);
+      navigate(redirectTo, { replace: true });
     },
   });
 };
 
 export const useLogout = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { logout } = useAuth();
 
-  return useMutation({
-    mutationFn: () => authApi.logout(),
-    onSuccess: () => {
-      localStorage.removeItem('authToken');
-      queryClient.clear();
-      navigate('/login');
-    },
-  });
+  return () => {
+    logout();
+    navigate('/', { replace: true });
+  };
 };
-
