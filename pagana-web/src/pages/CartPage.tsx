@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 
 import {
@@ -110,6 +110,7 @@ function CartItemRow({ item }: { item: CartItem }) {
 }
 
 export default function CartPage() {
+  const navigate = useNavigate();
   const { data: cart, isPending, isError, refetch } = useCart();
 
   if (isPending) {
@@ -181,11 +182,9 @@ export default function CartPage() {
           <p className="text-xs text-muted-foreground">
             Delivery and service fees are calculated at checkout.
           </p>
-          {/* Routes to /checkout once Milestone 4 lands; disabled until then. */}
           <Button
             className="w-full bg-brand hover:bg-brand-hover text-white"
-            disabled
-            title="Checkout is coming soon"
+            onClick={() => navigate('/checkout')}
           >
             Checkout
           </Button>

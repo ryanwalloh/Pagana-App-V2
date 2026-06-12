@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query';
 
 import { useAuth } from '@/features/auth/AuthProvider';
+import { SUPPRESS_ERROR_TOAST } from '@/lib/toastErrors';
 import { apiClient } from './client';
 
 export interface CartItem {
@@ -71,6 +72,7 @@ export function useCart() {
     queryFn: cartApi.getCart,
     // The cart endpoint is customer-only; never call it for guests or other roles.
     enabled: user?.role === 'customer',
+    meta: SUPPRESS_ERROR_TOAST,
   });
 }
 
@@ -79,12 +81,15 @@ function useCartInvalidation() {
   return () => queryClient.invalidateQueries({ queryKey: CART_KEY });
 }
 
+const mutationMeta = { meta: SUPPRESS_ERROR_TOAST };
+
 export function useSetCartItem() {
   const invalidate = useCartInvalidation();
   return useMutation({
     mutationFn: ({ productId, quantity }: { productId: number; quantity: number }) =>
       cartApi.setItem(productId, quantity),
     onSettled: invalidate,
+    ...mutationMeta,
   });
 }
 
@@ -94,6 +99,7 @@ export function useUpdateCartItemQuantity() {
     mutationFn: ({ itemId, quantity }: { itemId: number; quantity: number }) =>
       cartApi.updateItemQuantity(itemId, quantity),
     onSettled: invalidate,
+    ...mutationMeta,
   });
 }
 
@@ -102,6 +108,7 @@ export function useRemoveCartItem() {
   return useMutation({
     mutationFn: (itemId: number) => cartApi.removeItem(itemId),
     onSettled: invalidate,
+    ...mutationMeta,
   });
 }
 
@@ -110,5 +117,6 @@ export function useClearCart() {
   return useMutation({
     mutationFn: cartApi.clearCart,
     onSettled: invalidate,
+    ...mutationMeta,
   });
 }

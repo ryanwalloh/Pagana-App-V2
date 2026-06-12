@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { authApi } from '@/api/auth';
 import type { AuthResponse, User } from '@/api/types';
+import { SUPPRESS_ERROR_TOAST } from '@/lib/toastErrors';
 import { SESSION_EXPIRED_EVENT, tokenStorage } from '@/lib/tokenStorage';
 
 interface AuthContextValue {
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     enabled: hasSession,
     staleTime: 5 * 60 * 1000,
     retry: false,
+    meta: SUPPRESS_ERROR_TOAST,
   });
 
   const endSession = useCallback(() => {

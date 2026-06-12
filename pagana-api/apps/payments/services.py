@@ -18,7 +18,15 @@ def cents_from_decimal(amount):
 
 
 def normalize_processor_payload(payload):
-    if hasattr(payload, "to_dict_recursive"):
+    """Convert Stripe SDK objects into plain JSON-safe dicts.
+
+    stripe>=15 StripeObject is no longer dict-like: it has no .get()/dict()
+    support and exposes to_dict() instead (recursive by default). Plain dicts
+    (e.g. in tests) pass through unchanged.
+    """
+    if hasattr(payload, "to_dict"):
+        return payload.to_dict(for_json=True)
+    if hasattr(payload, "to_dict_recursive"):  # legacy stripe SDKs
         return payload.to_dict_recursive()
     return dict(payload)
 
@@ -72,15 +80,19 @@ def get_or_create_payment_intent(order, actor=None, reason=""):
 
     amount = order.total_amount
     idempotency_key = order.idempotency_key or str(order.public_id)
-    stripe_intent = create_stripe_payment_intent(
-        amount_cents=cents_from_decimal(amount),
-        currency=settings.STRIPE_CURRENCY.lower(),
-        metadata={
-            "order_id": str(order.id),
-            "order_public_id": str(order.public_id),
-            "customer_id": str(order.customer_id),
-        },
-        idempotency_key=f"payment-intent:{idempotency_key}",
+    # Normalize immediately: StripeObject supports item access but not dict
+    # methods like .get(), so downstream code must only ever see plain dicts.
+    stripe_intent = normalize_processor_payload(
+        create_stripe_payment_intent(
+            amount_cents=cents_from_decimal(amount),
+            currency=settings.STRIPE_CURRENCY.lower(),
+            metadata={
+                "order_id": str(order.id),
+                "order_public_id": str(order.public_id),
+                "customer_id": str(order.customer_id),
+            },
+            idempotency_key=f"payment-intent:{idempotency_key}",
+        )
     )
 
     attempt = PaymentAttempt.objects.create(
@@ -93,8 +105,8 @@ def get_or_create_payment_intent(order, actor=None, reason=""):
         currency=settings.STRIPE_CURRENCY.lower(),
         idempotency_key=idempotency_key,
         provider_payment_intent_id=stripe_intent["id"],
-        provider_client_secret=stripe_intent.get("client_secret", ""),
-        processor_response=normalize_processor_payload(stripe_intent),
+        provider_client_secret=stripe_intent.get("client_secret") or "",
+        processor_response=stripe_intent,
     )
     sync_order_payment_status(order, attempt.status)
     OrderTimelineEvent.objects.create(
@@ -154,9 +166,12 @@ def _maybe_queue_payment_notification(order, attempt):
 
 
 def apply_stripe_webhook(event):
+    # Real webhook events arrive as StripeObjects (no dict .get support);
+    # tests pass plain dicts. Normalize so both behave identically.
+    event = normalize_processor_payload(event)
     event_id = event["id"]
     event_type = event["type"]
-    data = event["data"]["object"]
+    data = dict(event["data"]["object"])
     intent_id = data["id"]
 
     with transaction.atomic():

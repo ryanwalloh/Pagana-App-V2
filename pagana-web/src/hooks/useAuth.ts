@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { authApi, type LoginCredentials, type SignupData } from '@/api/auth';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { SUPPRESS_ERROR_TOAST } from '@/lib/toastErrors';
 
 function useRedirectTarget(): string {
   const location = useLocation();
@@ -17,6 +18,7 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
+    meta: SUPPRESS_ERROR_TOAST,
     onSuccess: (data) => {
       setSession(data);
       navigate(redirectTo, { replace: true });
@@ -31,6 +33,7 @@ export const useSignup = () => {
 
   return useMutation({
     mutationFn: (data: SignupData) => authApi.signup(data),
+    meta: SUPPRESS_ERROR_TOAST,
     onSuccess: (data) => {
       setSession(data);
       navigate(redirectTo, { replace: true });

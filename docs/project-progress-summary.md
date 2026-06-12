@@ -1,6 +1,6 @@
 # Pagana Project Progress Summary
 
-> Last updated: June 11, 2026
+> Last updated: June 12, 2026
 > Audience: anyone (including future you) returning to the project after time away.
 > Companion docs: `system-context.md`, `migration-analysis.md`, `docs-pagana-api/`, `modules/`
 
@@ -24,7 +24,7 @@ All surfaces share one backend: `pagana-api`, a Django + DRF **modular monolith*
 ```
 pagana/
 ├── pagana-api/              # Django + DRF backend (ACTIVE — core foundation built)
-├── pagana-web/              # React + Vite + TS customer web app (skeleton)
+├── pagana-web/              # React + Vite + TS customer web app (✅ v1 complete — M0–M7)
 ├── pagana-admin/
 │   ├── pagana-superadmin/   # Full system admin portal (skeleton)
 │   └── pagana-ops/          # Operations staff portal (skeleton)
@@ -55,15 +55,15 @@ Git state at time of writing: branch `dev-git-readme-rw` checked out, working tr
 
 ## 3. The Big Picture: Where the Project Stands
 
-**The backend migration is done at the foundation level. Every client application is still a skeleton.**
+**The backend foundation is complete. The customer web app (`pagana-web`) v1 is complete. Other clients remain skeletons.**
 
 That is the one-sentence status. In more detail:
 
 | Component | Status |
 |---|---|
 | `pagana-api` | ✅ **Working backend foundation** — 9 modules, ~50 endpoints under `/api/v1/`, JWT auth, Stripe, dispatch, audit logging, ~1,200 lines of tests |
-| `docs/` | ✅ Comprehensive and current as of the April milestone |
-| `pagana-web` | ⚠️ Configured skeleton — Vite/TS/Tailwind/Shadcn/React Query set up; only Landing/Login/Register/Dashboard placeholder pages |
+| `docs/` | ✅ Comprehensive; updated through M7 (June 12, 2026) |
+| `pagana-web` | ✅ **Customer web v1 shipped** — auth, storefront, cart, COD + Stripe checkout, order history/tracking, account; 62 unit tests + 4 Playwright e2e specs; GitHub Actions CI |
 | `pagana-admin` (superadmin + ops) | ⚠️ Configured skeletons — tooling ready, no real pages |
 | `pagana-mobile-customer` | ⚠️ Skeleton — Expo + NativeWind configured, single `HomeScreen.js`, empty `api/`, `components/`, `navigation/` folders |
 | `pagana-mobile-vendor` | ⚠️ Skeleton — same shape as customer app |
@@ -147,10 +147,21 @@ Test files exist in every app (~1,240 lines total), weighted toward the critical
 
 ### 5.1 `pagana-web` (Customer Web)
 
-- Tooling fully configured: React 18, Vite, TypeScript, Tailwind, Shadcn UI, TanStack Query, React Router v6
-- Folder structure in place (`api/`, `components/`, `features/`, `hooks/`, `pages/`)
-- Pages are placeholders only: `LandingPage`, `LoginPage`, `RegisterPage`, `DashboardPage`
-- **Nothing is wired to `pagana-api` yet**
+**Status: v1 complete (M0–M7, June 2026).**
+
+Shipped customer flows:
+
+- **Auth** — login, register, JWT refresh, protected routes, app shell with mobile nav
+- **Storefront** — merchant list/search, storefront pages, product detail dialog, add-to-cart
+- **Cart** — quantity updates, cross-merchant conflict dialog, clear cart
+- **Checkout** — delivery form (Zod), prepare/confirm, idempotency key, COD + Stripe card
+- **Orders** — history list, detail, tracking stepper with conditional polling, confirmation page
+- **Account** — profile edit, dashboard with recent orders, checkout prefill from profile
+- **Hardening** — global error boundary, unified API error toasts, responsive pass, Playwright e2e, CI workflow
+
+Tooling: React 18, Vite, TypeScript, Tailwind, Shadcn UI, TanStack Query, React Router v6, Vitest (62 tests), Playwright (4 journey specs).
+
+See `pagana-web/README.md` and `docs/docs-pagana-web/pagana-web-wbs.md` for route map and test commands.
 
 ### 5.2 `pagana-admin` (Superadmin + Ops Portals)
 
@@ -189,18 +200,16 @@ From `pagana-api-progress.md`:
 - magic-link / passwordless auth (deferred — revisit only if the product deliberately keeps it)
 - notifications as a dedicated module (concepts exist; centralization can wait)
 
-### 6.3 Suggested Resumption Roadmap
+### 6.3 Suggested Next Steps (post customer-web v1)
 
-A practical order of attack for picking the project back up:
+With `pagana-web` v1 done, logical next work:
 
-1. **Re-verify the backend runs locally** — create venv, install `requirements.txt`, run migrations and the test suite, hit `GET /api/v1/health/`
-2. **Production hardening pass on `pagana-api`** — switch to PostgreSQL, move secrets to env vars (`python-dotenv`), pin a deploy story (gunicorn/whitenoise are stubbed in requirements)
-3. **Build the first real client** — the customer web app (`pagana-web`) is the natural start: auth flow against `/auth/*` + `/me`, storefront browsing, cart, checkout, order tracking. This exercises the largest portion of the API
-4. **Merchant surface next** — either `pagana-admin`-style web for merchants or the vendor mobile app: product management + order queue
-5. **Rider mobile app** — offers, assignment execution, location updates; this will surface the need for the real-time layer
-6. **Admin/ops portals** — wire the existing ops override and audit endpoints into `pagana-superadmin` / `pagana-ops`
-7. **Then the deferred backend layers** — real-time delivery, earnings/finance, reporting — driven by what the client builds actually demand
-8. **Housekeeping** — delete the empty `pagana-mobile/` directory; decide when `To-Refactor/Pagana-App` can be archived out of the repo; merge or prune stale branches (`dev-git-readme-rw` → `main`)
+1. **Production hardening** — PostgreSQL verification run, secrets/env review, CSP at deploy time, password-reset flow (backend gap)
+2. **Merchant surface** — vendor web or `pagana-mobile-vendor`: product management + order queue against existing merchant APIs
+3. **Rider mobile app** — offers, assignment execution, location updates; surfaces need for real-time delivery layer
+4. **Admin/ops portals** — wire ops override and audit endpoints into `pagana-superadmin` / `pagana-ops`
+5. **Deferred backend layers** — real-time delivery, earnings/finance, reporting — driven by client demand
+6. **Housekeeping** — delete empty `pagana-mobile/` directory; archive `To-Refactor/Pagana-App` when no longer needed
 
 ---
 
@@ -215,6 +224,7 @@ A practical order of attack for picking the project back up:
 | `docs/docs-pagana-api/api-endpoints-reference.md` | Every implemented endpoint: method, auth, use case |
 | `docs/docs-pagana-api/pagana-api-development-guide.md` | How to extend the backend safely; what must never be reintroduced |
 | `docs/modules/*.md` | Target-state design per module: identity, merchants, catalog, orders, payments, dispatch |
+| `docs/docs-pagana-web/pagana-web-wbs.md` | Customer web milestone WBS (M0–M7 complete) |
 | `README.md` (repo root) | Multi-platform structure overview and getting-started commands |
 
 ---
