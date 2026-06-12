@@ -6,7 +6,9 @@ This is the backend API for the Pagana multi-platform application, built with **
 
 ## ⚠️ Status
 
-This is a **placeholder structure** for architecture visualization. Full implementation will be developed during the project lifecycle.
+**Working backend foundation** — 9 Django apps, ~50 REST endpoints, JWT auth, Stripe payments, dispatch, audit logging, and a comprehensive test suite. Not a placeholder.
+
+The customer web app (`pagana-web`) is wired to this API for the full customer delivery flow.
 
 ## Technology Stack
 
@@ -96,6 +98,33 @@ CELERY_BROKER_URL=redis://localhost:6379/0
 CELERY_RESULT_BACKEND=redis://localhost:6379/1
 ```
 
+### Stripe (test mode, local development)
+
+Card payments use Stripe. The settings read three env vars (loaded from `.env`
+via `python-dotenv`; real environment variables take precedence):
+
+```env
+STRIPE_SECRET_KEY=sk_test_...        # Dashboard → Developers → API keys
+STRIPE_WEBHOOK_SECRET=whsec_...      # printed by `stripe listen` (below)
+STRIPE_CURRENCY=php
+```
+
+Payment status is driven by **webhooks** — without local webhook forwarding,
+card payments stay `pending` forever. In a third terminal:
+
+```bash
+# One-time: install the Stripe CLI (https://docs.stripe.com/stripe-cli) and log in
+stripe login
+
+# Every dev session: forward webhooks to the local API
+stripe listen --forward-to localhost:8000/api/v1/payments/webhooks/stripe
+```
+
+`stripe listen` prints a `whsec_...` signing secret on startup — put it in
+`.env` as `STRIPE_WEBHOOK_SECRET` (restart the server after changing it).
+To verify the pipeline: `stripe trigger payment_intent.succeeded` should
+create a processed `PaymentWebhookEvent` row.
+
 ### Database Configuration
 
 By default, the project uses SQLite. To use PostgreSQL or MySQL:
@@ -127,9 +156,8 @@ The API will follow RESTful conventions:
 
 ## Future Development
 
-- JWT authentication setup
 - API documentation with drf-spectacular or similar
-- Comprehensive test suite
-- CI/CD pipeline configuration
-- Production deployment settings
+- Password-reset flow (launch blocker — no endpoint yet)
+- PostgreSQL production verification run
+- Real-time dispatch/tracking delivery layer
 

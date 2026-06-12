@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { SUPPRESS_ERROR_TOAST } from '@/lib/toastErrors';
 import { apiClient } from './client';
 import type { Paginated } from './types';
 
@@ -63,6 +64,7 @@ export const catalogApi = {
 const PUBLIC_QUERY_OPTIONS = {
   staleTime: 60 * 1000,
   refetchOnWindowFocus: false,
+  meta: SUPPRESS_ERROR_TOAST,
 } as const;
 
 export function useMerchants(search?: string) {

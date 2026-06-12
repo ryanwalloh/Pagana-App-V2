@@ -1,8 +1,21 @@
 # Pagana Web — Work Breakdown Structure (WBS)
 
-> Last updated: June 11, 2026
+> Last updated: June 12, 2026
 > Source roadmap: `docs/docs-pagana-web/pagana-web-development-plan.md`
-> Status: engineering execution plan — implementation-ready
+> Status: **M0–M7 complete** — customer web v1 shipped (browse → cart → checkout → pay → track)
+
+## Milestone completion
+
+| Milestone | Status | Completed |
+|---|---|---|
+| M0 — Foundation & contract alignment | ✅ | June 2026 |
+| M1 — Auth UI | ✅ | June 2026 |
+| M2 — Public storefront | ✅ | June 2026 |
+| M3 — Cart | ✅ | June 2026 |
+| M4 — COD checkout | ✅ | June 2026 |
+| M5 — Stripe card payments | ✅ | June 2026 |
+| M6 — Orders & tracking | ✅ | June 2026 |
+| M7 — Hardening & polish | ✅ | June 12, 2026 |
 > Contract source of truth: verified directly against `pagana-api` source (serializers, models, services) on June 11, 2026
 
 ## How To Read This
@@ -434,6 +447,7 @@ M4 Checkout (COD)
 - **Dependencies:** M4-F2-T1.
 - **Complexity:** Low.
 - **DoD:** Decision recorded in this doc; field never submits invalid ISO codes.
+- **DECISION (recorded):** Single-country launch. `delivery_country` is fixed to `PH`, rendered as a read-only "Philippines (PH)" field and submitted via hidden input (`src/features/checkout/deliverySchema.ts` `DEFAULT_COUNTRY`). Phone validated client-side with a permissive `+`/digits/spaces/parens/dashes pattern, 7–32 chars. Revisit both when expanding beyond PH.
 
 ### M4-F3-T1 — Prepare flow `[FE]`
 - **Objective:** On reaching Review, `POST /checkout/prepare` with the form payload; render the server response only: line items, `subtotal`, `delivery_fee`, `service_fee`, `total_amount`, `allowed_payment_methods`. Re-run prepare if the user edits details. (Prepare validates merchant/product orderability server-side — surface those 400s by sending the user back to the cart with an explanatory toast.)
@@ -501,6 +515,7 @@ M5 Stripe Payments
 - **Dependencies:** Stripe test account access (**external blocker — needs account credentials from the owner**).
 - **Complexity:** Low (config only).
 - **DoD:** `stripe trigger payment_intent.succeeded` reaches the webhook endpoint and is persisted.
+- **DECISION (recorded):** Stripe does not support Philippines-based merchant accounts. The dev/test Stripe account is registered under a supported country (US) — fine for test mode, which never requires activation. **Production blocker to revisit before launch:** going live with Stripe requires a foreign entity (e.g. Stripe Atlas); the PH-native alternatives are PayMongo / Xendit / Maya. The provider abstraction in `pagana-api/apps/payments/providers.py` is the intended swap point; M5's flows (intent → confirm → webhook → poll) are provider-portable concepts.
 
 ### M5-F2-T1 — Payment method selector `[FE]`
 - **Objective:** Radio selection on the Review step driven by `allowed_payment_methods` from prepare (`cash_on_delivery` | `card`) — never hardcoded, so backend changes propagate.
@@ -693,9 +708,9 @@ M7 Hardening and Polish
 | Change | Milestone | Status |
 |---|---|---|
 | Unified auth response shape (signup ↔ login) + role claim in signup tokens | pre-M0 | ✅ done June 11, 2026 |
-| `GET /api/v1/merchants` public storefront list | M2 | **blocker for M2** |
-| `DELETE /api/v1/cart` clear-cart (verify; add if missing) | M3 | required for M3-F4 |
-| `STRIPE_CURRENCY` env decision | M5 | decision needed |
+| `GET /api/v1/merchants` public storefront list | M2 | ✅ done June 2026 |
+| `DELETE /api/v1/cart` clear-cart (verify; add if missing) | M3 | ✅ done June 2026 |
+| `STRIPE_CURRENCY` env decision | M5 | ✅ `php` (Philippines) |
 | Token blacklist / logout endpoint | deferred | not blocking v1 |
 | Saved customer addresses | deferred | not blocking v1 |
 

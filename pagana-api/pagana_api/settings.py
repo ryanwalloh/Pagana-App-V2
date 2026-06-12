@@ -4,8 +4,14 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Local development secrets (Stripe keys etc). Real environment variables
+# take precedence; the .env file only fills in what is not already set.
+load_dotenv(BASE_DIR / ".env")
 
 
 def env_bool(name, default=False):
@@ -166,7 +172,7 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173",
+    default="http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174",
 )
 
 CORS_ALLOW_CREDENTIALS = True

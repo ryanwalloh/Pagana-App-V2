@@ -8,6 +8,13 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import StorefrontPage from './pages/StorefrontPage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import OrderConfirmationPage from './pages/OrderConfirmationPage';
+import OrderDetailPage from './pages/OrderDetailPage';
+import PaymentPage from './pages/PaymentPage';
+import PaymentStatusPage from './pages/PaymentStatusPage';
+import OrdersPage from './pages/OrdersPage';
+import AccountPage from './pages/AccountPage';
 
 export const router = createBrowserRouter([
   {
@@ -54,7 +61,62 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      // Future authenticated routes (orders, account) mount here.
+      {
+        path: '/checkout',
+        element: (
+          <ProtectedRoute>
+            <CheckoutPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/checkout/success/:publicId',
+        element: (
+          <ProtectedRoute>
+            <OrderConfirmationPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/checkout/payment/:publicId',
+        element: (
+          <ProtectedRoute>
+            <PaymentPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/checkout/payment/:publicId/status',
+        element: (
+          <ProtectedRoute>
+            <PaymentStatusPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/orders',
+        element: (
+          <ProtectedRoute>
+            <OrdersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/orders/:publicId',
+        element: (
+          <ProtectedRoute>
+            <OrderDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/account',
+        element: (
+          <ProtectedRoute>
+            <AccountPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
